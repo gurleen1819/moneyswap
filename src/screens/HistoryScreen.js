@@ -1,4 +1,4 @@
-// screens/HistoryScreen.js
+
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
 import { db, auth } from "../services/firebase";
@@ -76,5 +76,5 @@ const styles = StyleSheet.create({
   },
   text: { fontSize: 16 },
   result: { fontSize: 18, fontWeight: "bold", marginTop: 4 },
-  date: { fontSize: 12, color: "#666", marginTop: 4 }, // ✅ moved here properly
+  date: { fontSize: 12, color: "#666", marginTop: 4 }, 
 });

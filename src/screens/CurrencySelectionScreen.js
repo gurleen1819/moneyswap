@@ -8,7 +8,7 @@ const currencies = [
   { code: "GBP", name: "British Pound" },
   { code: "JPY", name: "Japanese Yen" },
   { code: "CAD", name: "Canadian Dollar" },
-  // Add more currencies as needed
+
 ];
 
 export default function CurrencySelectionScreen({ route, navigation }) {
