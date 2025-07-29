@@ -1,13 +1,7 @@
 import React, { createContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-//  // if AuthContext is inside src/context/
-import { auth } from "../services/firebase";
-// ✅ Correct path
-
-
-
-
+import { auth, db } from "../services/firebase"; // ✅ FIXED: Added db
 
 export const AuthContext = createContext();
 
@@ -19,28 +13,45 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-        if (userDoc.exists()) {
-          setPreferences(userDoc.data());
-        } else {
-          await setDoc(doc(db, "users", currentUser.uid), preferences);
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+          if (userDoc.exists()) {
+            setPreferences(userDoc.data());
+          } else {
+            await setDoc(doc(db, "users", currentUser.uid), preferences);
+          }
+        } catch (e) {
+          console.error("Failed to load user preferences:", e.message);
         }
       } else {
         setUser(null);
       }
     });
+
     return unsubscribe;
   }, []);
 
   const updatePreferences = async (newPrefs) => {
     setPreferences(newPrefs);
     if (user) {
-      await setDoc(doc(db, "users", user.uid), newPrefs);
+      try {
+        await setDoc(doc(db, "users", user.uid), newPrefs);
+      } catch (e) {
+        console.error("Failed to update preferences:", e.message);
+      }
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout error:", error.message);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, logout: () => signOut(auth), preferences, updatePreferences }}>
+    <AuthContext.Provider value={{ user, logout, preferences, updatePreferences }}>
       {children}
     </AuthContext.Provider>
   );
