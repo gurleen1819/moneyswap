@@ -12,6 +12,8 @@ import {
 import { getRates } from "../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CurrencyDropdown from "../components/CurrencyDropdown";
+import { Ionicons } from "@expo/vector-icons";
+
 
 export default function HomeScreen({ navigation }) {
   const [amount, setAmount] = useState("");
@@ -133,9 +135,10 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       {/* Convert Button */}
-      <TouchableOpacity style={styles.convertButton} onPress={handleConvert}>
-        <Text style={styles.convertText}>Convert</Text>
-      </TouchableOpacity>
+<TouchableOpacity style={styles.convertButton} onPress={handleConvert}>
+  <Ionicons name="swap-horizontal" size={28} color="#fff" />
+</TouchableOpacity>
+
 
       {/* Animated Result */}
       {converted ? (
@@ -204,16 +207,18 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   convertButton: {
-    backgroundColor: "#4e91fc",
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
-    elevation: 3,
-  },
+  backgroundColor: "#4e91fc",
+  paddingVertical: 16,
+  paddingHorizontal: 20, 
+  borderRadius: 12,
+  alignItems: "center",
+  justifyContent: "center",
+  shadowColor: "#000",
+  shadowOpacity: 0.15,
+  shadowOffset: { width: 0, height: 3 },
+  shadowRadius: 5,
+  elevation: 3,
+},
   convertText: {
     color: "#fff",
     fontSize: 18,
