@@ -12,7 +12,6 @@ import {
 import { getRates } from "../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CurrencyDropdown from "../components/CurrencyDropdown";
-import { Ionicons } from "@expo/vector-icons";
 
 export default function HomeScreen({ navigation }) {
   const [amount, setAmount] = useState("");
@@ -22,10 +21,32 @@ export default function HomeScreen({ navigation }) {
   const [toCurrency, setToCurrency] = useState("INR");
   const animatedValue = useRef(new Animated.Value(0)).current;
 
+  const animatedStyle = {
+    opacity: animatedValue,
+    transform: [
+      {
+        scale: animatedValue.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.9, 1],
+        }),
+      },
+    ],
+  };
+
   useEffect(() => {
     fetchRate();
-    setConverted(""); // reset converted value when currency changes
+    setConverted("");
   }, [fromCurrency, toCurrency]);
+
+  useEffect(() => {
+    if (amount && !isNaN(amount) && rate) {
+      const result = parseFloat(amount) * rate;
+      setConverted(result.toFixed(2));
+      animateResult();
+    } else {
+      setConverted("");
+    }
+  }, [amount, rate]);
 
   const fetchRate = async () => {
     try {
@@ -47,17 +68,6 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  const handleConvert = () => {
-    if (!amount || isNaN(amount)) return;
-    if (!rate) {
-      alert("Exchange rate not available. Please try again later.");
-      return;
-    }
-    const result = parseFloat(amount) * rate;
-    setConverted(result.toFixed(2));
-    animateResult();
-  };
-
   const animateResult = () => {
     animatedValue.setValue(0);
     Animated.timing(animatedValue, {
@@ -68,22 +78,29 @@ export default function HomeScreen({ navigation }) {
     }).start();
   };
 
-  const animatedStyle = {
-    opacity: animatedValue,
-    transform: [
-      {
-        scale: animatedValue.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0.8, 1],
-        }),
-      },
-    ],
+  const handleKeyPress = (key) => {
+    if (key === "⌫") {
+      setAmount((prev) => prev.slice(0, -1));
+    } else if (key === ".") {
+      if (!amount.includes(".")) {
+        setAmount((prev) => (prev ? prev + key : "0."));
+      }
+    } else {
+      setAmount((prev) => (prev === "0" ? key : prev + key));
+    }
   };
 
   const getFlag = (currencyCode) => {
     const code = currencyCode.slice(0, 2).toLowerCase();
     return `https://flagcdn.com/w40/${code}.png`;
   };
+
+  const keypadButtons = [
+    ["1", "2", "3"],
+    ["4", "5", "6"],
+    ["7", "8", "9"],
+    [".", "0", "⌫"],
+  ];
 
   return (
     <View style={styles.container}>
@@ -101,9 +118,9 @@ export default function HomeScreen({ navigation }) {
         placeholder="Enter amount"
         keyboardType="numeric"
         value={amount}
-        onChangeText={setAmount}
         style={styles.input}
         placeholderTextColor="#888"
+        editable={false}
       />
 
       {/* Currency Selection */}
@@ -141,16 +158,24 @@ export default function HomeScreen({ navigation }) {
         </Text>
       )}
 
-      {/* Convert Button */}
-      <TouchableOpacity
-        style={styles.convertButton}
-        onPress={handleConvert}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="swap-horizontal" size={28} color="#fff" />
-      </TouchableOpacity>
+      {/* Keypad */}
+      <View style={styles.keypad}>
+        {keypadButtons.map((row, i) => (
+          <View key={i} style={styles.keypadRow}>
+            {row.map((key) => (
+              <TouchableOpacity
+                key={key}
+                style={styles.keypadButton}
+                onPress={() => handleKeyPress(key)}
+              >
+                <Text style={styles.keypadText}>{key}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </View>
 
-      {/* Animated Result */}
+      {/* Result */}
       {converted ? (
         <Animated.View style={[styles.resultContainer, animatedStyle]}>
           <Text style={styles.result}>
@@ -167,7 +192,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f0f4f8",
     padding: 20,
-    justifyContent: "flex-start",
   },
   header: {
     alignItems: "center",
@@ -189,10 +213,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 12,
-    fontSize: 16,
+    fontSize: 24,
     borderWidth: 1,
     borderColor: "#ccc",
     marginBottom: 20,
+    textAlign: "right",
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
@@ -222,11 +247,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#555",
   },
-  convertButton: {
+  keypad: {
+    marginBottom: 20,
+  },
+  keypadRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  keypadButton: {
+    flex: 1,
+    marginHorizontal: 5,
     backgroundColor: "#4e91fc",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
     borderRadius: 12,
+    paddingVertical: 18,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -234,6 +268,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 5,
     elevation: 3,
+  },
+  keypadText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
   },
   resultContainer: {
     marginTop: 25,
