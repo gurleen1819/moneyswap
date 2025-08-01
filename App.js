@@ -12,6 +12,7 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import HistoryScreen from "./src/screens/HistoryScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
+import CurrencySelectionScreen from "./src/screens/CurrencySelectionScreen"; 
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -44,10 +45,17 @@ function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-          // User logged in — show tabs
-          <Stack.Screen name="MainTabs" component={MainTabs} />
+          <>
+            {/* Main tabs */}
+            <Stack.Screen name="MainTabs" component={MainTabs} />
+            {/* Currency selection as modal/stack screen */}
+            <Stack.Screen
+              name="CurrencySelection"
+              component={CurrencySelectionScreen}
+              options={{ presentation: "modal" }} // optional modal style
+            />
+          </>
         ) : (
-          // User NOT logged in — show auth flow
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
@@ -57,6 +65,7 @@ function AppNavigator() {
     </NavigationContainer>
   );
 }
+
 
 export default function App() {
   return (
