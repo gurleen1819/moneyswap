@@ -14,7 +14,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import CurrencyDropdown from "../components/CurrencyDropdown";
 import { Ionicons } from "@expo/vector-icons";
 
-
 export default function HomeScreen({ navigation }) {
   const [amount, setAmount] = useState("");
   const [converted, setConverted] = useState("");
@@ -25,6 +24,7 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     fetchRate();
+    setConverted(""); // reset converted value when currency changes
   }, [fromCurrency, toCurrency]);
 
   const fetchRate = async () => {
@@ -82,7 +82,7 @@ export default function HomeScreen({ navigation }) {
 
   const getFlag = (currencyCode) => {
     const code = currencyCode.slice(0, 2).toLowerCase();
-    return `https://flagcdn.com/w40/${code}.png`; // Use 2-letter ISO flag prefix
+    return `https://flagcdn.com/w40/${code}.png`;
   };
 
   return (
@@ -134,17 +134,27 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Convert Button */}
-<TouchableOpacity style={styles.convertButton} onPress={handleConvert}>
-  <Ionicons name="swap-horizontal" size={28} color="#fff" />
-</TouchableOpacity>
+      {/* Show exchange rate */}
+      {rate && (
+        <Text style={styles.rateText}>
+          1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}
+        </Text>
+      )}
 
+      {/* Convert Button */}
+      <TouchableOpacity
+        style={styles.convertButton}
+        onPress={handleConvert}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="swap-horizontal" size={28} color="#fff" />
+      </TouchableOpacity>
 
       {/* Animated Result */}
       {converted ? (
         <Animated.View style={[styles.resultContainer, animatedStyle]}>
           <Text style={styles.result}>
-            Converted: {toCurrency} {converted}
+            {amount} {fromCurrency} = {converted} {toCurrency}
           </Text>
         </Animated.View>
       ) : null}
@@ -192,7 +202,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   dropdownContainer: {
     flexDirection: "row",
@@ -206,23 +216,24 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 4,
   },
+  rateText: {
+    textAlign: "center",
+    fontSize: 16,
+    marginBottom: 20,
+    color: "#555",
+  },
   convertButton: {
-  backgroundColor: "#4e91fc",
-  paddingVertical: 16,
-  paddingHorizontal: 20, 
-  borderRadius: 12,
-  alignItems: "center",
-  justifyContent: "center",
-  shadowColor: "#000",
-  shadowOpacity: 0.15,
-  shadowOffset: { width: 0, height: 3 },
-  shadowRadius: 5,
-  elevation: 3,
-},
-  convertText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+    backgroundColor: "#4e91fc",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+    elevation: 3,
   },
   resultContainer: {
     marginTop: 25,
