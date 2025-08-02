@@ -12,6 +12,9 @@ import {
 import { getRates } from "../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CurrencyDropdown from "../components/CurrencyDropdown";
+import { Ionicons } from "@expo/vector-icons";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db, auth } from "../services/firebase";
 
 export default function HomeScreen({ navigation }) {
   const [amount, setAmount] = useState("");
@@ -20,6 +23,25 @@ export default function HomeScreen({ navigation }) {
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("INR");
   const animatedValue = useRef(new Animated.Value(0)).current;
+  const saveToHistory = async ({ amount, from, to, result }) => {
+  try {
+  const user = auth.currentUser;
+console.log("Current User:", user); 
+if (!user) return;
+
+
+    const historyRef = collection(db, "users", user.uid, "history");
+    await addDoc(historyRef, {
+      amount,
+      from,
+      to,
+      result,
+      createdAt: serverTimestamp(),
+    });
+  } catch (e) {
+    console.warn("Error saving history:", e.message);
+  }
+};
 
   const animatedStyle = {
     opacity: animatedValue,
@@ -37,16 +59,6 @@ export default function HomeScreen({ navigation }) {
     fetchRate();
     setConverted("");
   }, [fromCurrency, toCurrency]);
-
-  useEffect(() => {
-    if (amount && !isNaN(amount) && rate) {
-      const result = parseFloat(amount) * rate;
-      setConverted(result.toFixed(2));
-      animateResult();
-    } else {
-      setConverted("");
-    }
-  }, [amount, rate]);
 
   const fetchRate = async () => {
     try {
@@ -90,6 +102,32 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+const onConvertPress = async () => {
+  if (amount && !isNaN(amount) && rate) {
+    try {
+      const result = parseFloat(amount) * rate;
+      const roundedResult = result.toFixed(2);
+      setConverted(roundedResult);
+      animateResult();
+
+      // Save to Firestore
+      await saveToHistory({
+        amount,
+        from: fromCurrency,
+        to: toCurrency,
+        result: roundedResult,
+      });
+    } catch (err) {
+      console.warn("Conversion error:", err.message);
+    }
+  } else {
+    alert("Please enter a valid amount.");
+  }
+};
+
+
+  
+
   const getFlag = (currencyCode) => {
     const code = currencyCode.slice(0, 2).toLowerCase();
     return `https://flagcdn.com/w40/${code}.png`;
@@ -104,7 +142,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+  
       <View style={styles.header}>
         <Image
           source={require("../../assets/exchange.png")}
@@ -113,7 +151,6 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.title}>MoneySwap</Text>
       </View>
 
-      {/* Input */}
       <TextInput
         placeholder="Enter amount"
         keyboardType="numeric"
@@ -123,7 +160,7 @@ export default function HomeScreen({ navigation }) {
         editable={false}
       />
 
-      {/* Currency Selection */}
+      
       <View style={styles.row}>
         <View style={styles.dropdownContainer}>
           <Image source={{ uri: getFlag(fromCurrency) }} style={styles.flag} />
@@ -137,6 +174,12 @@ export default function HomeScreen({ navigation }) {
             }
           />
         </View>
+
+        <TouchableOpacity onPress={onConvertPress} style={styles.convertButton}>
+  <Ionicons name="swap-horizontal" size={32} color="#4e91fc" />
+</TouchableOpacity>
+
+
         <View style={styles.dropdownContainer}>
           <Image source={{ uri: getFlag(toCurrency) }} style={styles.flag} />
           <CurrencyDropdown
@@ -227,6 +270,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
   },
   dropdownContainer: {
@@ -240,6 +284,17 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 8,
     borderRadius: 4,
+  },
+ convertButton: {
+  justifyContent: "center",
+  alignItems: "center",
+  paddingHorizontal: 8,
+},
+
+  convertIcon: {
+    width: 28,
+    height: 28,
+    tintColor: "#4e91fc",
   },
   rateText: {
     textAlign: "center",
@@ -260,7 +315,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     backgroundColor: "#4e91fc",
     borderRadius: 12,
-    paddingVertical: 18,
+    paddingVertical: 12, // smaller
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -271,7 +326,7 @@ const styles = StyleSheet.create({
   },
   keypadText: {
     color: "#fff",
-    fontSize: 22,
+    fontSize: 20, // slightly smaller
     fontWeight: "bold",
   },
   resultContainer: {

@@ -1,34 +1,29 @@
 
 import React, { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from "react-native";
-import { db, auth } from "../services/firebase";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const db = getFirestore();
+const auth = getAuth();
+
 
   const fetchHistory = async () => {
-    try {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const historyRef = collection(db, "users", user.uid, "history");
-      const q = query(historyRef, orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-
-      const data = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setHistory(data);
-    } catch (e) {
-      console.warn("Error fetching history:", e.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const user = auth.currentUser;
+    const q = query(collection(db, "users", user.uid, "history"));
+    const querySnapshot = await getDocs(q);
+    const historyData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log("Fetched history:", historyData);
+    setHistory(historyData); 
+  } catch (error) {
+    console.warn("Error fetching history:", error.message);
+  }
+};
 
   useEffect(() => {
     fetchHistory();

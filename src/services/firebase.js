@@ -1,9 +1,13 @@
-
-
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps } from "firebase/app";
+import {
+  getAuth,
+  initializeAuth,
+  getReactNativePersistence,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Config
 const firebaseConfig = {
   apiKey: "AIzaSyCy1G0gYRL2995rjPzh_7idaDzCPDsg39M",
   authDomain: "moneyswap-e77f7.firebaseapp.com",
@@ -14,6 +18,18 @@ const firebaseConfig = {
   measurementId: "G-MCZV3QG1TW"
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// Safe app init
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+
+// Safe auth init
+let auth;
+try {
+  auth = getAuth(app);
+} catch (e) {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage),
+  });
+}
+
+export { auth };
 export const db = getFirestore(app);
