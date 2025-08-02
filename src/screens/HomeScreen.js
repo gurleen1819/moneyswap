@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Animated,
   Easing,
 } from "react-native";
+import { useTheme } from "@react-navigation/native";
 import { getRates } from "../utils/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CurrencyDropdown from "../components/CurrencyDropdown";
@@ -17,6 +18,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../services/firebase";
 
 export default function HomeScreen({ navigation }) {
+  const { colors } = useTheme();
   const [amount, setAmount] = useState("");
   const [converted, setConverted] = useState("");
   const [rate, setRate] = useState(null);
@@ -135,22 +137,22 @@ export default function HomeScreen({ navigation }) {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.topContent}>
         <View style={styles.header}>
           <Image
             source={require("../../assets/exchange.png")}
             style={styles.logo}
           />
-          <Text style={styles.title}>MoneySwap</Text>
+          <Text style={[styles.title, { color: colors.text }]}>MoneySwap</Text>
         </View>
 
         <TextInput
           placeholder="Enter amount"
           keyboardType="numeric"
           value={amount}
-          style={styles.input}
-          placeholderTextColor="#888"
+          style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+          placeholderTextColor={colors.text + "99"}
           editable={false}
         />
 
@@ -169,7 +171,7 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <TouchableOpacity onPress={onConvertPress} style={styles.convertButton}>
-            <Ionicons name="swap-horizontal" size={32} color="#4e91fc" />
+            <Ionicons name="swap-horizontal" size={32} color={colors.primary} />
           </TouchableOpacity>
 
           <View style={styles.dropdownContainer}>
@@ -187,15 +189,14 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {rate && (
-          <Text style={styles.rateText}>
+          <Text style={[styles.rateText, { color: colors.text }]}>
             1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}
           </Text>
         )}
 
-        {/* MOVED UP HERE */}
         {converted ? (
           <Animated.View style={[styles.resultContainer, animatedStyle]}>
-            <Text style={styles.result}>
+            <Text style={[styles.result, { color: colors.text }]}>
               {amount} {fromCurrency} = {converted} {toCurrency}
             </Text>
           </Animated.View>
@@ -209,10 +210,10 @@ export default function HomeScreen({ navigation }) {
               {row.map((key) => (
                 <TouchableOpacity
                   key={key}
-                  style={styles.keypadButton}
+                  style={[styles.keypadButton, { backgroundColor: colors.primary }]}
                   onPress={() => handleKeyPress(key)}
                 >
-                  <Text style={styles.keypadText}>{key}</Text>
+                  <Text style={[styles.keypadText, { color: colors.background }]}>{key}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -226,7 +227,6 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f4f8",
     padding: 20,
     justifyContent: "space-between",
   },
@@ -250,15 +250,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#333",
   },
   input: {
-    backgroundColor: "#fff",
     borderRadius: 10,
     padding: 12,
     fontSize: 24,
     borderWidth: 1,
-    borderColor: "#ccc",
     marginBottom: 20,
     textAlign: "right",
     shadowColor: "#000",
@@ -294,7 +291,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 16,
     marginBottom: 15,
-    color: "#555",
   },
   keypadRow: {
     flexDirection: "row",
@@ -304,7 +300,6 @@ const styles = StyleSheet.create({
   keypadButton: {
     flex: 1,
     marginHorizontal: 5,
-    backgroundColor: "#4e91fc",
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
@@ -316,7 +311,6 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   keypadText: {
-    color: "#fff",
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -326,7 +320,6 @@ const styles = StyleSheet.create({
   },
   result: {
     fontSize: 22,
-    color: "#333",
     fontWeight: "bold",
   },
 });

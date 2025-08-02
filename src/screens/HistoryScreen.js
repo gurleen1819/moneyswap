@@ -9,8 +9,10 @@ import {
 import { getFirestore, collection, query, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { formatDistanceToNow } from "date-fns";
+import { useTheme } from "@react-navigation/native";
 
 export default function HistoryScreen() {
+  const { colors } = useTheme();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const db = getFirestore();
@@ -43,18 +45,18 @@ export default function HistoryScreen() {
   }, []);
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.text}>
+    <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.text }]}>
+      <Text style={[styles.text, { color: colors.text }]}>
         {item.amount} {item.from} → {item.to}
       </Text>
 
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-      <Text style={styles.result}>
+      <Text style={[styles.result, { color: colors.primary }]}>
         = {item.result} {item.to}
       </Text>
 
-      <Text style={styles.date}>
+      <Text style={[styles.date, { color: colors.text }]}>
         {item.createdAt
           ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true })
           : "Just now"}
@@ -63,16 +65,16 @@ export default function HistoryScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Exchange History</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.primary }]}>Exchange History</Text>
 
       {loading ? (
         <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#2e86de" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : history.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No exchange history found.</Text>
+          <Text style={[styles.emptyText, { color: colors.text }]}>No exchange history found.</Text>
         </View>
       ) : (
         <FlatList
@@ -87,46 +89,39 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: "#f7f9fc" },
+  container: { flex: 1, padding: 16 },
   title: {
     fontSize: 26,
     fontWeight: "bold",
     marginBottom: 16,
     textAlign: "center",
-    color: "#2e86de",
   },
   card: {
     padding: 16,
-    backgroundColor: "#fff",
     marginVertical: 8,
     borderRadius: 12,
-    // Shadow iOS
-    shadowColor: "#000",
+
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
     shadowRadius: 5,
-    // Elevation Android
+
     elevation: 5,
   },
   text: {
     fontSize: 18,
-    color: "#333",
   },
   result: {
     fontSize: 20,
     fontWeight: "700",
     marginTop: 8,
-    color: "#27ae60",
   },
   date: {
     fontSize: 14,
-    color: "#888",
     marginTop: 8,
     fontStyle: "italic",
   },
   divider: {
     height: 1,
-    backgroundColor: "#eee",
     marginVertical: 12,
   },
   loaderContainer: {
@@ -142,6 +137,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: "#999",
   },
 });

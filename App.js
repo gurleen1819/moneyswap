@@ -1,6 +1,6 @@
 // App.js
 import React, { useContext } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,7 +12,7 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import HistoryScreen from "./src/screens/HistoryScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
-import CurrencySelectionScreen from "./src/screens/CurrencySelectionScreen"; 
+import CurrencySelectionScreen from "./src/screens/CurrencySelectionScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -39,20 +39,18 @@ function MainTabs() {
 }
 
 function AppNavigator() {
-  const { user } = useContext(AuthContext);
+  const { user, preferences } = useContext(AuthContext);
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={preferences.darkMode ? DarkTheme : DefaultTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
           <>
-            {/* Main tabs */}
             <Stack.Screen name="MainTabs" component={MainTabs} />
-            {/* Currency selection as modal/stack screen */}
             <Stack.Screen
               name="CurrencySelection"
               component={CurrencySelectionScreen}
-              options={{ presentation: "modal" }} // optional modal style
+              options={{ presentation: "modal" }}
             />
           </>
         ) : (
@@ -65,7 +63,6 @@ function AppNavigator() {
     </NavigationContainer>
   );
 }
-
 
 export default function App() {
   return (
