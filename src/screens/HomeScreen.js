@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../services/firebase";
 
+
 export default function HomeScreen({ navigation }) {
   const { colors } = useTheme();
   const [amount, setAmount] = useState("");
@@ -173,6 +174,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity onPress={onConvertPress} style={styles.convertButton}>
             <Ionicons name="swap-horizontal" size={32} color={colors.primary} />
           </TouchableOpacity>
+          
 
           <View style={styles.dropdownContainer}>
             <Image source={{ uri: getFlag(toCurrency) }} style={styles.flag} />

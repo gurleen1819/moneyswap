@@ -13,6 +13,7 @@ import HistoryScreen from "./src/screens/HistoryScreen";
 import LoginScreen from "./src/screens/LoginScreen";
 import SignupScreen from "./src/screens/SignupScreen";
 import CurrencySelectionScreen from "./src/screens/CurrencySelectionScreen";
+import RateGraphScreen from "./src/screens/RateGraphScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -27,12 +28,14 @@ function MainTabs() {
           if (route.name === "Home") iconName = "swap-horizontal";
           else if (route.name === "History") iconName = "time-outline";
           else if (route.name === "Settings") iconName = "settings-outline";
+           else if (route.name === "RateGraph") iconName = "stats-chart-outline";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="History" component={HistoryScreen} />
+        <Tab.Screen name="RateGraph" component={RateGraphScreen} />
       <Tab.Screen name="Settings" component={SettingsScreen} />
     </Tab.Navigator>
   );
@@ -47,6 +50,9 @@ function AppNavigator() {
         {user ? (
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="RateGraph" component={RateGraphScreen} />
+       
+
             <Stack.Screen
               name="CurrencySelection"
               component={CurrencySelectionScreen}
