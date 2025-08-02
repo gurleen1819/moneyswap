@@ -23,25 +23,23 @@ export default function HomeScreen({ navigation }) {
   const [fromCurrency, setFromCurrency] = useState("USD");
   const [toCurrency, setToCurrency] = useState("INR");
   const animatedValue = useRef(new Animated.Value(0)).current;
+
   const saveToHistory = async ({ amount, from, to, result }) => {
-  try {
-  const user = auth.currentUser;
-console.log("Current User:", user); 
-if (!user) return;
-
-
-    const historyRef = collection(db, "users", user.uid, "history");
-    await addDoc(historyRef, {
-      amount,
-      from,
-      to,
-      result,
-      createdAt: serverTimestamp(),
-    });
-  } catch (e) {
-    console.warn("Error saving history:", e.message);
-  }
-};
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+      const historyRef = collection(db, "users", user.uid, "history");
+      await addDoc(historyRef, {
+        amount,
+        from,
+        to,
+        result,
+        createdAt: serverTimestamp(),
+      });
+    } catch (e) {
+      console.warn("Error saving history:", e.message);
+    }
+  };
 
   const animatedStyle = {
     opacity: animatedValue,
@@ -102,31 +100,27 @@ if (!user) return;
     }
   };
 
-const onConvertPress = async () => {
-  if (amount && !isNaN(amount) && rate) {
-    try {
-      const result = parseFloat(amount) * rate;
-      const roundedResult = result.toFixed(2);
-      setConverted(roundedResult);
-      animateResult();
+  const onConvertPress = async () => {
+    if (amount && !isNaN(amount) && rate) {
+      try {
+        const result = parseFloat(amount) * rate;
+        const roundedResult = result.toFixed(2);
+        setConverted(roundedResult);
+        animateResult();
 
-      // Save to Firestore
-      await saveToHistory({
-        amount,
-        from: fromCurrency,
-        to: toCurrency,
-        result: roundedResult,
-      });
-    } catch (err) {
-      console.warn("Conversion error:", err.message);
+        await saveToHistory({
+          amount,
+          from: fromCurrency,
+          to: toCurrency,
+          result: roundedResult,
+        });
+      } catch (err) {
+        console.warn("Conversion error:", err.message);
+      }
+    } else {
+      alert("Please enter a valid amount.");
     }
-  } else {
-    alert("Please enter a valid amount.");
-  }
-};
-
-
-  
+  };
 
   const getFlag = (currencyCode) => {
     const code = currencyCode.slice(0, 2).toLowerCase();
@@ -142,90 +136,89 @@ const onConvertPress = async () => {
 
   return (
     <View style={styles.container}>
-  
-      <View style={styles.header}>
-        <Image
-          source={require("../../assets/exchange.png")}
-          style={styles.logo}
+      <View style={styles.topContent}>
+        <View style={styles.header}>
+          <Image
+            source={require("../../assets/exchange.png")}
+            style={styles.logo}
+          />
+          <Text style={styles.title}>MoneySwap</Text>
+        </View>
+
+        <TextInput
+          placeholder="Enter amount"
+          keyboardType="numeric"
+          value={amount}
+          style={styles.input}
+          placeholderTextColor="#888"
+          editable={false}
         />
-        <Text style={styles.title}>MoneySwap</Text>
-      </View>
 
-      <TextInput
-        placeholder="Enter amount"
-        keyboardType="numeric"
-        value={amount}
-        style={styles.input}
-        placeholderTextColor="#888"
-        editable={false}
-      />
-
-      
-      <View style={styles.row}>
-        <View style={styles.dropdownContainer}>
-          <Image source={{ uri: getFlag(fromCurrency) }} style={styles.flag} />
-          <CurrencyDropdown
-            label="From"
-            value={fromCurrency}
-            onPress={() =>
-              navigation.navigate("CurrencySelection", {
-                onSelect: setFromCurrency,
-              })
-            }
-          />
-        </View>
-
-        <TouchableOpacity onPress={onConvertPress} style={styles.convertButton}>
-  <Ionicons name="swap-horizontal" size={32} color="#4e91fc" />
-</TouchableOpacity>
-
-
-        <View style={styles.dropdownContainer}>
-          <Image source={{ uri: getFlag(toCurrency) }} style={styles.flag} />
-          <CurrencyDropdown
-            label="To"
-            value={toCurrency}
-            onPress={() =>
-              navigation.navigate("CurrencySelection", {
-                onSelect: setToCurrency,
-              })
-            }
-          />
-        </View>
-      </View>
-
-      {/* Show exchange rate */}
-      {rate && (
-        <Text style={styles.rateText}>
-          1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}
-        </Text>
-      )}
-
-      {/* Keypad */}
-      <View style={styles.keypad}>
-        {keypadButtons.map((row, i) => (
-          <View key={i} style={styles.keypadRow}>
-            {row.map((key) => (
-              <TouchableOpacity
-                key={key}
-                style={styles.keypadButton}
-                onPress={() => handleKeyPress(key)}
-              >
-                <Text style={styles.keypadText}>{key}</Text>
-              </TouchableOpacity>
-            ))}
+        <View style={styles.row}>
+          <View style={styles.dropdownContainer}>
+            <Image source={{ uri: getFlag(fromCurrency) }} style={styles.flag} />
+            <CurrencyDropdown
+              label="From"
+              value={fromCurrency}
+              onPress={() =>
+                navigation.navigate("CurrencySelection", {
+                  onSelect: setFromCurrency,
+                })
+              }
+            />
           </View>
-        ))}
+
+          <TouchableOpacity onPress={onConvertPress} style={styles.convertButton}>
+            <Ionicons name="swap-horizontal" size={32} color="#4e91fc" />
+          </TouchableOpacity>
+
+          <View style={styles.dropdownContainer}>
+            <Image source={{ uri: getFlag(toCurrency) }} style={styles.flag} />
+            <CurrencyDropdown
+              label="To"
+              value={toCurrency}
+              onPress={() =>
+                navigation.navigate("CurrencySelection", {
+                  onSelect: setToCurrency,
+                })
+              }
+            />
+          </View>
+        </View>
+
+        {rate && (
+          <Text style={styles.rateText}>
+            1 {fromCurrency} = {rate.toFixed(4)} {toCurrency}
+          </Text>
+        )}
+
+        {/* MOVED UP HERE */}
+        {converted ? (
+          <Animated.View style={[styles.resultContainer, animatedStyle]}>
+            <Text style={styles.result}>
+              {amount} {fromCurrency} = {converted} {toCurrency}
+            </Text>
+          </Animated.View>
+        ) : null}
       </View>
 
-      {/* Result */}
-      {converted ? (
-        <Animated.View style={[styles.resultContainer, animatedStyle]}>
-          <Text style={styles.result}>
-            {amount} {fromCurrency} = {converted} {toCurrency}
-          </Text>
-        </Animated.View>
-      ) : null}
+      <View style={styles.bottomContent}>
+        <View style={styles.keypad}>
+          {keypadButtons.map((row, i) => (
+            <View key={i} style={styles.keypadRow}>
+              {row.map((key) => (
+                <TouchableOpacity
+                  key={key}
+                  style={styles.keypadButton}
+                  onPress={() => handleKeyPress(key)}
+                >
+                  <Text style={styles.keypadText}>{key}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -235,6 +228,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f0f4f8",
     padding: 20,
+    justifyContent: "space-between",
+  },
+  topContent: {
+    flexShrink: 1,
+  },
+  bottomContent: {
+    marginTop: 10,
   },
   header: {
     alignItems: "center",
@@ -285,25 +285,16 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 4,
   },
- convertButton: {
-  justifyContent: "center",
-  alignItems: "center",
-  paddingHorizontal: 8,
-},
-
-  convertIcon: {
-    width: 28,
-    height: 28,
-    tintColor: "#4e91fc",
+  convertButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
   },
   rateText: {
     textAlign: "center",
     fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 15,
     color: "#555",
-  },
-  keypad: {
-    marginBottom: 20,
   },
   keypadRow: {
     flexDirection: "row",
@@ -315,7 +306,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     backgroundColor: "#4e91fc",
     borderRadius: 12,
-    paddingVertical: 12, // smaller
+    paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
@@ -326,7 +317,7 @@ const styles = StyleSheet.create({
   },
   keypadText: {
     color: "#fff",
-    fontSize: 20, // slightly smaller
+    fontSize: 20,
     fontWeight: "bold",
   },
   resultContainer: {
