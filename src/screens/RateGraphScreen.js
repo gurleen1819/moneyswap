@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ActivityIndicator, StyleSheet, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 import { LineChart } from "react-native-chart-kit";
-import { getRateHistory } from "../utils/api"; 
+import { getRateHistory } from "../utils/api";
+import { useTheme } from "@react-navigation/native";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -9,7 +16,7 @@ export default function RateGraphScreen() {
   const [graphData, setGraphData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const { colors, dark } = useTheme();
 
   const baseCurrency = "USD";
   const targetCurrency = "INR";
@@ -19,13 +26,11 @@ export default function RateGraphScreen() {
       try {
         const today = new Date();
         const endDate = new Date(today);
-        endDate.setDate(today.getDate() - 1); 
+        endDate.setDate(today.getDate() - 1);
         const startDate = new Date(today);
-        startDate.setDate(today.getDate() - 8); 
+        startDate.setDate(today.getDate() - 8);
 
         const format = (d) => d.toISOString().split("T")[0];
-
-        console.log("Fetching rates from", format(startDate), "to", format(endDate));
 
         const data = await getRateHistory(
           baseCurrency,
@@ -34,8 +39,6 @@ export default function RateGraphScreen() {
           format(endDate)
         );
 
-        console.log("Rate history API data:", data);
-
         if (!data || !data.rates || Object.keys(data.rates).length === 0) {
           setError("No data available");
           setLoading(false);
@@ -43,7 +46,7 @@ export default function RateGraphScreen() {
         }
 
         const sortedDates = Object.keys(data.rates).sort();
-        const labels = sortedDates.map((date) => date.slice(5)); // MM-DD
+        const labels = sortedDates.map((date) => date.slice(5));
         const values = sortedDates.map((date) => data.rates[date][targetCurrency]);
 
         setGraphData({
@@ -54,7 +57,6 @@ export default function RateGraphScreen() {
         setError(null);
         setLoading(false);
       } catch (err) {
-        console.error("Fetch error:", err);
         setError("Failed to fetch data");
         setLoading(false);
       }
@@ -63,26 +65,34 @@ export default function RateGraphScreen() {
     fetchData();
   }, []);
 
-  if (loading) {
+  if (loading)
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#4e91fc" />
-        <Text>Loading exchange rates...</Text>
+      <View
+        style={[
+          styles.centered,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.text }}>Loading exchange rates...</Text>
       </View>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
-      <View style={styles.centered}>
-        <Text style={{ color: "red" }}>{error}</Text>
+      <View
+        style={[
+          styles.centered,
+          { backgroundColor: colors.background },
+        ]}
+      >
+        <Text style={{ color: colors.error || "red" }}>{error}</Text>
       </View>
     );
-  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.title, { color: colors.text }]}>
         📈 {baseCurrency} → {targetCurrency} Exchange Rate (Last 8 Days)
       </Text>
       <LineChart
@@ -92,14 +102,20 @@ export default function RateGraphScreen() {
         yAxisLabel=""
         yAxisSuffix=""
         chartConfig={{
-          backgroundColor: "#f5f5f5",
-          backgroundGradientFrom: "#e0f0ff",
-          backgroundGradientTo: "#ffffff",
+          backgroundColor: colors.card,
+          backgroundGradientFrom: dark ? "#222" : "#e0f0ff",
+          backgroundGradientTo: dark ? "#121212" : "#ffffff",
           decimalPlaces: 4,
-          color: (opacity = 1) => `rgba(78, 145, 252, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          color: (opacity = 1) =>
+            `rgba(78, 145, 252, ${opacity})`,
+          labelColor: (opacity = 1) =>
+            `rgba(${dark ? "255, 255, 255" : "0, 0, 0"}, ${opacity})`,
           style: { borderRadius: 16 },
-          propsForDots: { r: "4", strokeWidth: "2", stroke: "#4e91fc" },
+          propsForDots: {
+            r: "4",
+            strokeWidth: "2",
+            stroke: "#4e91fc",
+          },
         }}
         bezier
         style={{ marginVertical: 16, borderRadius: 16 }}
@@ -109,21 +125,7 @@ export default function RateGraphScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-    backgroundColor: "#f5f5f5",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  centered: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
+  container: { flex: 1, padding: 16, alignItems: "center", justifyContent: "center" },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", padding: 16 },
+  title: { fontSize: 20, fontWeight: "bold" },
 });
