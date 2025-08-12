@@ -16,15 +16,17 @@ import CurrencyDropdown from "../components/CurrencyDropdown";
 import { Ionicons } from "@expo/vector-icons";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db, auth } from "../services/firebase";
-
+import { AuthContext } from "../context/AuthContext";
 
 export default function HomeScreen({ navigation }) {
   const { colors } = useTheme();
+  const { preferences, setBaseCurrency, setTargetCurrency } = useContext(AuthContext);
+  const fromCurrency = preferences.baseCurrency;
+  const toCurrency = preferences.targetCurrency;
+
   const [amount, setAmount] = useState("");
   const [converted, setConverted] = useState("");
   const [rate, setRate] = useState(null);
-  const [fromCurrency, setFromCurrency] = useState("USD");
-  const [toCurrency, setToCurrency] = useState("INR");
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   const saveToHistory = async ({ amount, from, to, result }) => {
@@ -152,7 +154,10 @@ export default function HomeScreen({ navigation }) {
           placeholder="Enter amount"
           keyboardType="numeric"
           value={amount}
-          style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+          style={[
+            styles.input,
+            { backgroundColor: colors.card, color: colors.text, borderColor: colors.border },
+          ]}
           placeholderTextColor={colors.text + "99"}
           editable={false}
         />
@@ -165,7 +170,9 @@ export default function HomeScreen({ navigation }) {
               value={fromCurrency}
               onPress={() =>
                 navigation.navigate("CurrencySelection", {
-                  onSelect: setFromCurrency,
+                  picker: "from",
+                  // pass callback back in to fix current crash
+                  onSelect: setBaseCurrency,
                 })
               }
             />
@@ -174,7 +181,6 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity onPress={onConvertPress} style={styles.convertButton}>
             <Ionicons name="swap-horizontal" size={32} color={colors.primary} />
           </TouchableOpacity>
-          
 
           <View style={styles.dropdownContainer}>
             <Image source={{ uri: getFlag(toCurrency) }} style={styles.flag} />
@@ -183,7 +189,8 @@ export default function HomeScreen({ navigation }) {
               value={toCurrency}
               onPress={() =>
                 navigation.navigate("CurrencySelection", {
-                  onSelect: setToCurrency,
+                  picker: "to",
+                  onSelect: setTargetCurrency,
                 })
               }
             />
@@ -227,32 +234,12 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "space-between",
-  },
-  topContent: {
-    flexShrink: 1,
-  },
-  bottomContent: {
-    marginTop: 10,
-  },
-  header: {
-    alignItems: "center",
-    marginTop: 50,
-    marginBottom: 20,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    resizeMode: "contain",
-    marginBottom: 5,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-  },
+  container: { flex: 1, padding: 20, justifyContent: "space-between" },
+  topContent: { flexShrink: 1 },
+  bottomContent: { marginTop: 10 },
+  header: { alignItems: "center", marginTop: 50, marginBottom: 20 },
+  logo: { width: 80, height: 80, resizeMode: "contain", marginBottom: 5 },
+  title: { fontSize: 26, fontWeight: "bold" },
   input: {
     borderRadius: 10,
     padding: 12,
@@ -266,39 +253,12 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  dropdownContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    marginHorizontal: 5,
-  },
-  flag: {
-    width: 30,
-    height: 20,
-    marginRight: 8,
-    borderRadius: 4,
-  },
-  convertButton: {
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 8,
-  },
-  rateText: {
-    textAlign: "center",
-    fontSize: 16,
-    marginBottom: 15,
-  },
-  keypadRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  dropdownContainer: { flexDirection: "row", alignItems: "center", flex: 1, marginHorizontal: 5 },
+  flag: { width: 30, height: 20, marginRight: 8, borderRadius: 4 },
+  convertButton: { justifyContent: "center", alignItems: "center", paddingHorizontal: 8 },
+  rateText: { textAlign: "center", fontSize: 16, marginBottom: 15 },
+  keypadRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 15 },
   keypadButton: {
     flex: 1,
     marginHorizontal: 5,
@@ -312,16 +272,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  keypadText: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  resultContainer: {
-    marginTop: 25,
-    alignItems: "center",
-  },
-  result: {
-    fontSize: 22,
-    fontWeight: "bold",
-  },
+  keypadText: { fontSize: 20, fontWeight: "bold" },
+  resultContainer: { marginTop: 25, alignItems: "center" },
+  result: { fontSize: 22, fontWeight: "bold" },
 });

@@ -11,7 +11,8 @@ import {
 import { useTheme } from "@react-navigation/native";
 
 export default function CurrencySelectionScreen({ route, navigation }) {
-  const { onSelect } = route.params;
+  // safely read onSelect; may be undefined
+  const onSelect = route?.params?.onSelect;
   const { colors } = useTheme();
 
   const [search, setSearch] = useState("");
@@ -36,12 +37,13 @@ export default function CurrencySelectionScreen({ route, navigation }) {
         return;
       }
 
+      // Build unique currency map: { USD: "United States dollar", ...}
       const currencyMap = {};
       data.forEach((country) => {
-        if (country.currencies) {
+        if (country?.currencies && typeof country.currencies === "object") {
           Object.entries(country.currencies).forEach(([code, details]) => {
-            if (!currencyMap[code]) {
-              currencyMap[code] = details.name;
+            if (code && !currencyMap[code]) {
+              currencyMap[code] = details?.name ?? code;
             }
           });
         }
@@ -53,7 +55,6 @@ export default function CurrencySelectionScreen({ route, navigation }) {
       }));
 
       currencyArray.sort((a, b) => a.code.localeCompare(b.code));
-
       setCurrencies(currencyArray);
     } catch (error) {
       console.error("Error fetching currencies:", error);
@@ -62,11 +63,30 @@ export default function CurrencySelectionScreen({ route, navigation }) {
     }
   };
 
-  const filtered = currencies.filter(
-    (item) =>
-      item.code.toLowerCase().includes(search.toLowerCase()) ||
-      item.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = currencies.filter((item) => {
+    const term = search.toLowerCase();
+    return (
+      item.code.toLowerCase().includes(term) ||
+      item.name.toLowerCase().includes(term)
+    );
+  });
+
+  const handlePick = (code) => {
+    // Only call if supplied and is a function
+    if (typeof onSelect === "function") {
+      try {
+        onSelect(code);
+      } catch (e) {
+        console.warn("onSelect threw an error:", e);
+      }
+    } else {
+      console.warn("onSelect is not provided to CurrencySelectionScreen.");
+    }
+    // Only go back if we actually can
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   if (loading) {
     return (
@@ -86,34 +106,32 @@ export default function CurrencySelectionScreen({ route, navigation }) {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <TextInput
         placeholder="Search currency"
-        placeholderTextColor={colors.text + "99"} 
+        placeholderTextColor={colors.text + "99"}
         value={search}
         onChangeText={setSearch}
-        style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.card }]}
+        style={[
+          styles.input,
+          { color: colors.text, borderColor: colors.border, backgroundColor: colors.card },
+        ]}
       />
+
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.code}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[styles.item, { borderBottomColor: colors.border, backgroundColor: colors.card }]}
-            onPress={() => {
-              onSelect(item.code);
-              navigation.goBack();
-            }}
+            style={[
+              styles.item,
+              { borderBottomColor: colors.border, backgroundColor: colors.card },
+            ]}
+            onPress={() => handlePick(item.code)}
           >
             <Text style={[styles.code, { color: colors.text }]}>{item.code}</Text>
             <Text style={{ color: colors.text }}>{item.name}</Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={() => (
-          <Text
-            style={{
-              textAlign: "center",
-              marginTop: 20,
-              color: colors.text,
-            }}
-          >
+          <Text style={{ textAlign: "center", marginTop: 20, color: colors.text }}>
             No currencies found
           </Text>
         )}

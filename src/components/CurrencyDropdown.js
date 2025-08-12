@@ -11,5 +11,5 @@ export default function CurrencyDropdown({ label, value, onPress }) {
 
 const styles = StyleSheet.create({
   button: { padding: 15, backgroundColor: "#ddd", borderRadius: 8, marginVertical: 8 },
-  text: { fontSize: 16 }
+  text: { fontSize: 16 },
 });
