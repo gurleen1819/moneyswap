@@ -6,6 +6,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 import {
   getFirestore,
@@ -13,6 +15,8 @@ import {
   query,
   onSnapshot,
   orderBy,
+  deleteDoc,
+  doc,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { formatDistanceToNow } from "date-fns";
@@ -23,6 +27,7 @@ export default function HistoryScreen() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [deletingIds, setDeletingIds] = useState(new Set());
 
   const db = getFirestore();
   const auth = getAuth();
@@ -73,14 +78,47 @@ export default function HistoryScreen() {
     setTimeout(() => setRefreshing(false), 500);
   }, []);
 
+  const confirmDelete = (item) => {
+    Alert.alert(
+      "Delete entry",
+      "Are you sure you want to delete this history item?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => handleDelete(item) },
+      ]
+    );
+  };
+
+  const handleDelete = async (item) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      setDeletingIds((prev) => new Set(prev).add(item.id));
+      await deleteDoc(doc(db, "users", user.uid, "history", item.id));
+      // No need to manually update state; onSnapshot will fire.
+    } catch (e) {
+      console.warn("Failed to delete history item:", e?.message);
+      Alert.alert("Delete failed", "Please try again.");
+    } finally {
+      setDeletingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  };
+
   const renderItem = ({ item }) => {
+    const isDeleting = deletingIds.has(item.id);
+
     // createdAt may be a Firestore Timestamp or undefined if just added locally
     const dateLabel =
       item?.createdAt?.toDate
         ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true })
         : item?.createdAtLocal
-          ? formatDistanceToNow(new Date(item.createdAtLocal), { addSuffix: true })
-          : "Just now";
+        ? formatDistanceToNow(new Date(item.createdAtLocal), { addSuffix: true })
+        : "Just now";
 
     return (
       <View
@@ -89,9 +127,30 @@ export default function HistoryScreen() {
           { backgroundColor: colors.card, shadowColor: colors.text },
         ]}
       >
-        <Text style={[styles.text, { color: colors.text }]}>
-          {item.amount} {item.from} → {item.to}
-        </Text>
+        {/* Header row: conversion text + delete button */}
+        <View style={styles.row}>
+          <Text style={[styles.text, { color: colors.text, flex: 1 }]}>
+            {item.amount} {item.from} → {item.to}
+          </Text>
+
+          <TouchableOpacity
+            onPress={() => confirmDelete(item)}
+            disabled={isDeleting}
+            style={[
+              styles.deleteBtn,
+              {
+                borderColor: colors.border,
+                opacity: isDeleting ? 0.6 : 1,
+              },
+            ]}
+          >
+            {isDeleting ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={[styles.deleteTxt, { color: colors.text }]}>🗑️</Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
@@ -154,8 +213,24 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   text: {
     fontSize: 18,
+  },
+  deleteBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginLeft: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteTxt: {
+    fontSize: 16,
   },
   result: {
     fontSize: 20,
