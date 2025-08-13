@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)", // dark semi-transparent overlay
+    backgroundColor: "rgba(0,0,0,0.4)", 
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     marginBottom: 20,
     fontWeight: "bold",
-    color: "#fff", // white for better contrast
+    color: "#fff",
   },
   input: {
     width: "100%",

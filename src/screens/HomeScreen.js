@@ -171,7 +171,7 @@ export default function HomeScreen({ navigation }) {
               onPress={() =>
                 navigation.navigate("CurrencySelection", {
                   picker: "from",
-                  // pass callback back in to fix current crash
+                
                   onSelect: setBaseCurrency,
                 })
               }

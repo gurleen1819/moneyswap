@@ -11,7 +11,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 
 export default function CurrencySelectionScreen({ route, navigation }) {
-  // safely read onSelect; may be undefined
+
   const onSelect = route?.params?.onSelect;
   const { colors } = useTheme();
 
@@ -37,7 +37,7 @@ export default function CurrencySelectionScreen({ route, navigation }) {
         return;
       }
 
-      // Build unique currency map: { USD: "United States dollar", ...}
+    
       const currencyMap = {};
       data.forEach((country) => {
         if (country?.currencies && typeof country.currencies === "object") {
@@ -72,7 +72,7 @@ export default function CurrencySelectionScreen({ route, navigation }) {
   });
 
   const handlePick = (code) => {
-    // Only call if supplied and is a function
+  
     if (typeof onSelect === "function") {
       try {
         onSelect(code);
@@ -82,7 +82,7 @@ export default function CurrencySelectionScreen({ route, navigation }) {
     } else {
       console.warn("onSelect is not provided to CurrencySelectionScreen.");
     }
-    // Only go back if we actually can
+ 
     if (navigation.canGoBack()) {
       navigation.goBack();
     }

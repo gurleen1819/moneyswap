@@ -18,10 +18,10 @@ const firebaseConfig = {
   measurementId: "G-MCZV3QG1TW"
 };
 
-// Safe app init
+
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Safe auth init
+
 let auth;
 try {
   auth = getAuth(app);

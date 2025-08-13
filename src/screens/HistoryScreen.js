@@ -21,7 +21,7 @@ import {
 import { getAuth } from "firebase/auth";
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from "@react-navigation/native";
-import { MaterialIcons } from "@expo/vector-icons"; // <-- add this at the top
+import { MaterialIcons } from "@expo/vector-icons"; 
 
 
 export default function HistoryScreen() {
@@ -43,7 +43,6 @@ export default function HistoryScreen() {
       return;
     }
 
-    // Real-time listener (newest first)
     const q = query(
       collection(db, "users", user.uid, "history"),
       orderBy("createdAt", "desc")
@@ -74,8 +73,7 @@ export default function HistoryScreen() {
   }, [db, auth]);
 
   const onRefresh = useCallback(() => {
-    // Because we’re using onSnapshot, there’s nothing to manually refetch.
-    // This just shows the spinner briefly.
+  
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 500);
   }, []);
@@ -98,7 +96,7 @@ export default function HistoryScreen() {
     try {
       setDeletingIds((prev) => new Set(prev).add(item.id));
       await deleteDoc(doc(db, "users", user.uid, "history", item.id));
-      // No need to manually update state; onSnapshot will fire.
+      
     } catch (e) {
       console.warn("Failed to delete history item:", e?.message);
       Alert.alert("Delete failed", "Please try again.");
@@ -129,7 +127,7 @@ export default function HistoryScreen() {
           { backgroundColor: colors.card, shadowColor: colors.text },
         ]}
       >
-        {/* Header row: conversion text + delete button */}
+     
         <View style={styles.row}>
           <Text style={[styles.text, { color: colors.text, flex: 1 }]}>
             {item.amount} {item.from} → {item.to}
