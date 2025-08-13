@@ -21,6 +21,8 @@ import {
 import { getAuth } from "firebase/auth";
 import { formatDistanceToNow } from "date-fns";
 import { useTheme } from "@react-navigation/native";
+import { MaterialIcons } from "@expo/vector-icons"; // <-- add this at the top
+
 
 export default function HistoryScreen() {
   const { colors } = useTheme();
@@ -133,23 +135,24 @@ export default function HistoryScreen() {
             {item.amount} {item.from} → {item.to}
           </Text>
 
-          <TouchableOpacity
-            onPress={() => confirmDelete(item)}
-            disabled={isDeleting}
-            style={[
-              styles.deleteBtn,
-              {
-                borderColor: colors.border,
-                opacity: isDeleting ? 0.6 : 1,
-              },
-            ]}
-          >
-            {isDeleting ? (
-              <ActivityIndicator size="small" color={colors.primary} />
-            ) : (
-              <Text style={[styles.deleteTxt, { color: colors.text }]}>🗑️</Text>
-            )}
-          </TouchableOpacity>
+         <TouchableOpacity
+  onPress={() => confirmDelete(item)}
+  disabled={isDeleting}
+  style={[
+    styles.deleteBtn,
+    {
+      borderColor: colors.border,
+      opacity: isDeleting ? 0.6 : 1,
+    },
+  ]}
+>
+  {isDeleting ? (
+    <ActivityIndicator size="small" color={colors.primary} />
+  ) : (
+    <MaterialIcons name="delete-outline" size={22} color={colors.text} />
+  )}
+</TouchableOpacity>
+
         </View>
 
         <View style={[styles.divider, { backgroundColor: colors.border }]} />
